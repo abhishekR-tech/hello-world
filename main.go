@@ -25,7 +25,8 @@ func letterWorker(letter rune, position int, letterChan chan<- struct {
 }
 
 func main() {
-	message := "Hello, World!"
+	// Printing the Hello from
+	message := "Hello, 世界"
 	letters := []rune(message)
 
 	// Create a channel to receive letters
