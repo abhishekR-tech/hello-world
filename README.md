@@ -1,2 +1,2 @@
 # Hello-World
-Beginner Repository for writing Hello World code for the coding gods.
+Beginner Repository for priting Hello World ASCII Art.
