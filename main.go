@@ -7,9 +7,83 @@ import (
 	"time"
 )
 
-// letterWorker represents a worker that specializes in delivering one letter
+// asciiLetters contains the ASCII art representation for each character
+var asciiLetters = map[rune][]string{
+	'H': {
+		"█   █",
+		"█   █",
+		"█████",
+		"█   █",
+		"█   █",
+	},
+	'e': {
+		"█████",
+		"█    ",
+		"█████",
+		"█    ",
+		"█████",
+	},
+	'l': {
+		"█    ",
+		"█    ",
+		"█    ",
+		"█    ",
+		"█████",
+	},
+	'o': {
+		"█████",
+		"█   █",
+		"█   █",
+		"█   █",
+		"█████",
+	},
+	',': {
+		"     ",
+		"     ",
+		"     ",
+		"  █  ",
+		" █   ",
+	},
+	' ': {
+		"     ",
+		"     ",
+		"     ",
+		"     ",
+		"     ",
+	},
+	'W': {
+		"█   █",
+		"█   █",
+		"█ █ █",
+		"██ ██",
+		"█   █",
+	},
+	'r': {
+		"█████",
+		"█   █",
+		"█████",
+		"█  █ ",
+		"█   █",
+	},
+	'd': {
+		"█████",
+		"█   █",
+		"█   █",
+		"█   █",
+		"█████",
+	},
+	'!': {
+		"  █  ",
+		"  █  ",
+		"  █  ",
+		"     ",
+		"  █  ",
+	},
+}
+
+// letterWorker now delivers ASCII art letters instead of single characters
 func letterWorker(letter rune, position int, letterChan chan<- struct {
-	char     rune
+	art      []string
 	position int
 }, wg *sync.WaitGroup) {
 	defer wg.Done()
@@ -17,25 +91,23 @@ func letterWorker(letter rune, position int, letterChan chan<- struct {
 	// Simulate "processing time" for each letter
 	time.Sleep(time.Duration(position) * 100 * time.Millisecond)
 
-	// Send the letter and its position through the channel
+	// Send the ASCII art and position through the channel
 	letterChan <- struct {
-		char     rune
+		art      []string
 		position int
-	}{letter, position}
+	}{asciiLetters[letter], position}
 }
 
 func main() {
-	// Printing the Hello from
-	message := "Hello, 世界"
+	message := "Hello, World!"
 	letters := []rune(message)
 
-	// Create a channel to receive letters
+	// Create a channel to receive ASCII art letters
 	letterChan := make(chan struct {
-		char     rune
+		art      []string
 		position int
 	}, len(letters))
 
-	// Create a WaitGroup to synchronize our letter workers
 	var wg sync.WaitGroup
 
 	// Launch a goroutine for each letter
@@ -44,22 +116,36 @@ func main() {
 		go letterWorker(letter, i, letterChan, &wg)
 	}
 
-	// Launch a goroutine to close the channel after all workers are done
+	// Close channel after all workers finish
 	go func() {
 		wg.Wait()
 		close(letterChan)
 	}()
 
-	// Create a slice to store our final message
-	result := make([]string, len(letters))
+	// Create a matrix to store our ASCII art message
+	// Each character is 5 lines tall and 6 characters wide (5 + 1 space between letters)
+	result := make([][]string, 5) // 5 rows
+	for i := range result {
+		result[i] = make([]string, len(letters))
+		for j := range result[i] {
+			result[i][j] = strings.Repeat(" ", 6)
+		}
+	}
 
-	// Collect letters as they arrive and build our message
+	// Collect and display ASCII letters as they arrive
+	letterCount := 0
 	for letter := range letterChan {
-		result[letter.position] = string(letter.char)
+		// Add the ASCII art to our result matrix
+		for i, line := range letter.art {
+			result[i][letter.position] = line + " "
+		}
 
-		// Print the current state of the message
-		fmt.Printf("\r%s%s",
-			strings.Join(result, ""),
-			strings.Repeat(" ", len(letters)-letter.position-1))
+		// Clear screen (basic approach) and display current state
+		fmt.Print("\033[H\033[2J")
+		for _, line := range result {
+			fmt.Println(strings.Join(line, ""))
+		}
+
+		letterCount++
 	}
 }
